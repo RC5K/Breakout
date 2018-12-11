@@ -1,2 +1,2 @@
 # Breakout
-clone of atari breakout using pygame
+Simple clone of atari breakout using pygame.
