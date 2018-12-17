@@ -91,7 +91,7 @@ def detect(ball_x,ball_y,brickxy,score,brick_width,brick_length,displaywidth,dis
         y_right_boundary = y + brick_length
         if ball_x <= x_right_boundary and ball_x >= x_left_boundary and ball_y >= y_left_boundary and ball_y <= y_right_boundary:
             i[0] = displaywidth
-            i[0] = displayheight
+            i[1] = displayheight
             score += 1
     updatebrick(brickxy,brick_width,brick_length)
     return score
@@ -142,8 +142,8 @@ def gameloop():
         scoretemp = score
         if lives == 0: # lose game
             gameexit = True
-        # if score == 36: # win game and reset
-        #     brickxy = brick_generator()
+        if score == 36: # win game and reset
+            brickxy = brick_generator()
         for event in pygame.event.get(): # to quit game
             if event.type == pygame.QUIT:
                 gameexit = True
@@ -200,6 +200,7 @@ def gameloop():
             ball_y += ball_ychange
         obj(paddle_x,paddle_y,paddle_width,paddle_height,red)
         obj(ball_x,ball_y,ball_width,ball_height,blue)
+        print(ball_x,ball_y)
         pygame.display.update()#refreshs
         clock.tick(FPS) # sets the fps of the game
     lives = 3
