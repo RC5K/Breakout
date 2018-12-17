@@ -60,12 +60,13 @@ def button(msg,x,y,w,h,tc,ic,ac,action=None):
     render(msg,x+(w/2),y+(h/2),font,tc)
 
 def counter(a,b,x,y):
-    font = pygame.font.SysFont("comicsansms",25)
+    font = pygame.font.SysFont("comicsansms",20)
     render(a+str(b),x,y,font,pygame.Color("black"))
 
 def quit():
     pygame.quit()
     sys.exit()
+
 def obj(thingx, thingy, thingw, thingh, color):
     pygame.draw.rect(gamedisplay, color, [thingx, thingy, thingw, thingh])
 def flipflop(ball_going_right):
@@ -119,6 +120,7 @@ def detect(ball_x,ball_y,brickxy,score):
             brickxy[i][1] = displayheight
             score += 1
     updatebrick(brickxy)
+    return score
 def gameintro():
     intro = True
     while intro:
@@ -127,11 +129,7 @@ def gameintro():
                 quit()
 
         gamedisplay.fill(pygame.Color("black"))
-        font = pygame.font.SysFont("comicsansms",115) # figure out font size ratio
-        textsurf = font.render("Breakout", True, pygame.Color("white"))
-        textrect = textsurf.get_rect()
-        textrect.center = ((displaywidth/2),(displayheight/5))
-        gamedisplay.blit(textsurf, textrect)
+        render("Breakout", displaywidth/2, displayheight/5, pygame.font.SysFont("comicsansms",115), pygame.Color("white"))
 
         button("Start",displaywidth*(3/16),displayheight*(3/4),displaywidth/6,displayheight/12,black,green,bright_green,gameloop) # creates button
         button("Quit",displaywidth*(11/16),displayheight*(3/4),displaywidth/6,displayheight/12,black,red,bright_red,quit) # creates button
@@ -139,9 +137,9 @@ def gameintro():
         pygame.display.update()
         clock.tick(15)
 def gameloop():
-    global paddle_x, paddle_y, ball_x, ball_y, ball_going_right, ball_going_up, FPS, lives, score, paddle_height, paddle_width, ball_xchange, ball_xchange
+    global paddle_x, paddle_y, ball_x, ball_y, ball_going_right, ball_going_up, FPS, lives, score, paddle_height, paddle_width, ball_xchange, ball_ychange
     gameexit = False
-    dx = 0
+    x_change = 0
     brickxy = brick_generator()
     #pygame.mixer.Sound.play(theme)
     while not gameexit:
@@ -153,18 +151,21 @@ def gameloop():
                 gameexit = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT and paddle_x >= 0 and paddle_x <=800:
-                    dx = -20
+                    x_change = -20
                 if event.key == pygame.K_RIGHT and paddle_x >= 0 and paddle_x <=800:
-                    dx = 20
+                    x_change = 20
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-                    dx = 0
+                    x_change = 0
         if paddle_x <= 0:
             paddle_x = 1
-        if paddle_x >= 800:
-            paddle_x = 799
+        if paddle_x >= displaywidth:
+            paddle_x = displaywidth-1
         if lives == 0: # lose game
             gameexit = True
+        # if score == 36:
+            #gameoutro()
+            #gameexit = True
         lbound = paddle_x - 20
         rbound = paddle_x + (paddle_width/2) + 20
         if ball_going_up == False and ball_y >= 490 and ball_y <= 520 and ball_x <= rbound and ball_x >= lbound:# paddle hit
@@ -186,13 +187,14 @@ def gameloop():
             ball_going_up = True
         elif ball_y <= 0: # hit ceiling
             ball_going_up = False
-        paddle_x += dx
+        paddle_x += x_change
         gamedisplay.fill(pygame.Color("gray"))
         counter("Score: ", score, 50,50)
         counter("Lives: ", lives, 150,50)
-        detect(ball_x,ball_y,brickxy,score)
+        score = detect(ball_x,ball_y,brickxy,score)
         if scoretemp != score:
             ball_going_up = flipflop(ball_going_up)
+            print("ball up" + str(ball_going_up))
         if ball_going_up == True and ball_going_right == True:
             ball_x += ball_xchange
             ball_y -= ball_ychange
