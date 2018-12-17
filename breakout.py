@@ -6,7 +6,6 @@ gamedisplay = pygame.display.set_mode((displaywidth,displayheight)) # builds the
 pygame.display.set_caption("Brickbreaker")# sets the name of the window
 clock = pygame.time.Clock()
 
-
 #colours
 red = (200,0,0)
 orange = (255,165,0)
@@ -67,7 +66,7 @@ def updatebrick(brickxy,brick_width,brick_length):
 def brick_generator(brick_width,brick_length,displayheight):
     brickxy = []
     for i in range(0,4):
-        for a in range(0,9):
+        for a in range(0,8):
             x = (a*brick_width)
             y = (displayheight*(5/12))-(i*brick_length)
             if i == 0:
@@ -90,11 +89,26 @@ def detect(ball_x,ball_y,brickxy,score,brick_width,brick_length,displaywidth,dis
         x_right_boundary = x + brick_width
         y_right_boundary = y + brick_length
         if ball_x <= x_right_boundary and ball_x >= x_left_boundary and ball_y >= y_left_boundary and ball_y <= y_right_boundary:
-            i[0] = displaywidth
-            i[1] = displayheight
+            i[0] = displaywidth + 1000
+            i[1] = displayheight + 1000
             score += 1
     updatebrick(brickxy,brick_width,brick_length)
     return score
+def win_detect(brickxy):
+    win = False
+    condition = True
+    counter = 0
+    while condition:
+        if brickxy[counter][0] == displaywidth+1000 and brickxy[counter][1] == displayheight+1000:
+            win = True
+        else:
+            win = False
+            condition = False
+        if counter != len(brickxy):
+            counter += 1
+        else:
+            condition = False
+    return win
 def gameintro():
     intro = True
     while intro:
@@ -109,7 +123,6 @@ def gameintro():
         button("Quit",displaywidth*(11/16),displayheight*(3/4),displaywidth/6,displayheight/12,black,red,bright_red,quit) # creates button
 
         pygame.display.update()
-
 def gameloop():
     lives = 3
     score = 0
@@ -142,10 +155,10 @@ def gameloop():
         scoretemp = score
         if lives == 0: # lose game
             gameexit = True
-        if score == 36: # win game and reset
-            brickxy = brick_generator()
-        for event in pygame.event.get(): # to quit game
-            if event.type == pygame.QUIT:
+        if win_detect(brickxy):
+            brickxy = brick_generator(brick_width,brick_length,displayheight)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: # to quit game
                 gameexit = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT and paddle_x >= 0 and paddle_x <=displaywidth:
@@ -200,7 +213,6 @@ def gameloop():
             ball_y += ball_ychange
         obj(paddle_x,paddle_y,paddle_width,paddle_height,red)
         obj(ball_x,ball_y,ball_width,ball_height,blue)
-        print(ball_x,ball_y)
         pygame.display.update()#refreshs
         clock.tick(FPS) # sets the fps of the game
     lives = 3
