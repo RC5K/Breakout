@@ -141,6 +141,10 @@ def gameloop():
         ball_going_righttemp = ball_going_right
         ball_going_uptemp = ball_going_up
         scoretemp = score
+        if lives == 0: # lose game
+            gameexit = True
+        if score == 36: # win game and reset
+            brickxy = brick_generator()
         for event in pygame.event.get(): # to quit game
             if event.type == pygame.QUIT:
                 gameexit = True
@@ -156,24 +160,18 @@ def gameloop():
             paddle_x = 1
         if paddle_x >= displaywidth:
             paddle_x = displaywidth-1
-        if lives == 0: # lose game
-            gameexit = True
-        # if score == 36:
-            #gameoutro()
-            #gameexit = True
         paddle_left_boundary = paddle_x - paddle_xchange
         paddle_right_boundary = paddle_x + (paddle_width/2) + paddle_xchange
-        if ball_going_up == False and ball_y >= 490 and ball_y <= 520 and ball_x <= paddle_right_boundary and ball_x >= paddle_left_boundary:# paddle hit
+        if ball_going_up == False and ball_y >= (paddle_y-10) and ball_y <= (paddle_y+20) and ball_x <= paddle_right_boundary and ball_x >= paddle_left_boundary:# paddle hit
             ball_going_up = True
         elif ball_x <= 0 or ball_x >= displaywidth: # hit side walls
             ball_going_right = flipflop(ball_going_right)
         elif ball_y >= displayheight: # hit floor
             lives -= 1
-            paddle_x = 400-(paddle_width/2)
-            paddle_y= 500
-            ball_x = 400
-            ball_y = 480
-            brickxy = brick_generator()
+            paddle_x = (displaywidth/2)-(paddle_width/2)
+            paddle_y = (5/6)*displayheight
+            ball_x = displaywidth/2
+            ball_y = (4/5)*displayheight
             a = random.randint(0,1)
             if a == 1:
                 ball_going_right = True
@@ -184,8 +182,8 @@ def gameloop():
             ball_going_up = False
         paddle_x += x_change
         gamedisplay.fill(pygame.Color("gray"))
-        counter("Score: ", score, 50,50)
-        counter("Lives: ", lives, 150,50)
+        counter("Score: ", score, displaywidth/16,displayheight/12)
+        counter("Lives: ", lives, (3/16)*displaywidth,displayheight/12)
         score = detect(ball_x,ball_y,brickxy,score)
         if scoretemp != score:
             ball_going_up = flipflop(ball_going_up)
