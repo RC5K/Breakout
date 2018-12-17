@@ -8,8 +8,6 @@ displayheight = 600
 gamedisplay = pygame.display.set_mode((displaywidth,displayheight)) # builds the window and sets size
 pygame.display.set_caption("Brickbreaker")# sets the name of the window
 clock = pygame.time.Clock()
-fontpath = pygame.font.match_font("comicsansms")
-font = pygame.font.SysFont(fontpath, 25)
 paddle_height = displayheight/30
 paddle_width = (3/16)*displaywidth
 ball_height = displayheight/40
@@ -44,7 +42,7 @@ bright_red = (255,0,0)
 bright_green = (0,255,0)
 
 def render(text,x,y,font,colour):
-    text = font.render(msg,True,colour)
+    text = font.render(text,True,colour)
     textrect = text.get_rect()
     textrect.center = ((x),(y))
     gamedisplay.blit(text,textrect)
@@ -52,28 +50,18 @@ def render(text,x,y,font,colour):
 def button(msg,x,y,w,h,tc,ic,ac,action=None):
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
-
     if x+w > mouse[0] > x and y+h > mouse[1] > y:
         pygame.draw.rect(gamedisplay, ac,(x,y,w,h))
         if click[0] == 1 and action != None:
             action()
     else:
         pygame.draw.rect(gamedisplay, ic,(x,y,w,h))
-    smallText = pygame.font.SysFont("comicsansms",20)
-    textsurf = font.render(msg,True,tc)
-    textrect = textsurf.get_rect()
-    textrect.center = ( (x+(w/2)), (y+(h/2)))
-    gamedisplay.blit(textsurf, textrect)
+    font = pygame.font.SysFont("comicsansms",20)
+    render(msg,x+(w/2),y+(h/2),font,tc)
+
 def counter(a,b,x,y):
-    global font
-    largetext = font
-    textsurf = font.render(a+str(b), True, pygame.Color("black"))
-    textrect = textsurf.get_rect()
-    textrect.center = ((x),(y))
-    gamedisplay.blit(textsurf, textrect)
-def messagetoscreen(msg, color):
-    screentext = font.render(msg, True, color)
-    gamedisplay.blit(screentext, [displaywidth/2, displayheight/2])
+    font = pygame.font.SysFont("comicsansms",25)
+    render(a+str(b),x,y,font,pygame.Color("black"))
 
 def quit():
     pygame.quit()
@@ -118,8 +106,7 @@ def updatebrick(brickxy):
         elif temp == 3:
             colour = blue
         obj(x,y,brick_width,brick_length,colour)
-def detect(ball_x,ball_y,brickxy):
-    global score
+def detect(ball_x,ball_y,brickxy,score):
     for i in range(0,(len(brickxy)-1)):
         x = brickxy[i][0]
         y = brickxy[i][1]
@@ -203,7 +190,7 @@ def gameloop():
         gamedisplay.fill(pygame.Color("gray"))
         counter("Score: ", score, 50,50)
         counter("Lives: ", lives, 150,50)
-        detect(ball_x,ball_y,brickxy)
+        detect(ball_x,ball_y,brickxy,score)
         if scoretemp != score:
             ball_going_up = flipflop(ball_going_up)
         if ball_going_up == True and ball_going_right == True:
