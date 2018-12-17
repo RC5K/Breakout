@@ -10,24 +10,27 @@ pygame.display.set_caption("Brickbreaker")# sets the name of the window
 clock = pygame.time.Clock()
 fontpath = pygame.font.match_font("comicsansms")
 font = pygame.font.SysFont(fontpath, 25)
-pheight = 20
-pwidth = 150
-bheight = 15
-bwidth = 15
-bup = True
+paddle_height = displayheight/30
+paddle_width = (3/16)*displaywidth
+ball_height = displayheight/40
+ball_width = (3/160)*displaywidth
+ball_going_up = True
 a = random.randint(0,1)
 if a == 1:
-    bright = True
+    ball_going_right = True
 else:
-    bright = False
-dbx = 4
-dby = 3
-mx = 0
-my = 0
-px = 400-(pwidth/2)
-py = 500
-bx = 400
-by = 480
+    ball_going_right = False
+ball_xchange = displaywidth/200
+ball_ychange = displayheight/200
+paddle_x = (displaywidth/2)-(paddle_width/2)
+paddle_y= (5/6)*displayheight
+ball_x = displaywidth/2
+ball_y = (4/5)*displayheight
+brick_length = 50
+brick_width = 100
+
+
+#colours
 red = (200,0,0)
 orange = (255,165,0)
 yellow = (255,255,0)
@@ -39,31 +42,14 @@ black = (0,0,0)
 white = (255,255,255)
 bright_red = (255,0,0)
 bright_green = (0,255,0)
-def quit():
-    pygame.quit()
-    sys.exit()
 
-def text(a,b,x,y):
-    global font
-    largetext = font
-    textsurf, textrect = text_objects(a + str(b), largetext)
+def render(text,x,y,font,colour):
+    text = font.render(msg,True,colour)
+    textrect = text.get_rect()
     textrect.center = ((x),(y))
-    gamedisplay.blit(textsurf, textrect)
-def text_objects(text, font):
-    textSurface = font.render(text, True, black)
-    return textSurface, textSurface.get_rect()
-def messagetoscreen(msg, color):
-    screentext = font.render(msg, True, color)
-    gamedisplay.blit(screentext, [displaywidth/2, displayheight/2])
-def flipflop(bright):
-    if bright == True:
-        bright = False
-    elif bright == False:
-        bright = True
-    return bright
-def obj(thingx, thingy, thingw, thingh, color):
-    pygame.draw.rect(gamedisplay, color, [thingx, thingy, thingw, thingh])
-def button(msg,x,y,w,h,ic,ac,action=None):
+    gamedisplay.blit(text,textrect)
+
+def button(msg,x,y,w,h,tc,ic,ac,action=None):
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
 
@@ -74,15 +60,38 @@ def button(msg,x,y,w,h,ic,ac,action=None):
     else:
         pygame.draw.rect(gamedisplay, ic,(x,y,w,h))
     smallText = pygame.font.SysFont("comicsansms",20)
-    textSurf, textRect = text_objects(msg, smallText)
-    textRect.center = ( (x+(w/2)), (y+(h/2)) )
-    gamedisplay.blit(textSurf, textRect)
-def brick():
+    textsurf = font.render(msg,True,tc)
+    textrect = textsurf.get_rect()
+    textrect.center = ( (x+(w/2)), (y+(h/2)))
+    gamedisplay.blit(textsurf, textrect)
+def counter(a,b,x,y):
+    global font
+    largetext = font
+    textsurf = font.render(a+str(b), True, pygame.Color("black"))
+    textrect = textsurf.get_rect()
+    textrect.center = ((x),(y))
+    gamedisplay.blit(textsurf, textrect)
+def messagetoscreen(msg, color):
+    screentext = font.render(msg, True, color)
+    gamedisplay.blit(screentext, [displaywidth/2, displayheight/2])
+
+def quit():
+    pygame.quit()
+    sys.exit()
+def obj(thingx, thingy, thingw, thingh, color):
+    pygame.draw.rect(gamedisplay, color, [thingx, thingy, thingw, thingh])
+def flipflop(ball_going_right):
+    if ball_going_right == True:
+        ball_going_right = False
+    elif ball_going_right == False:
+        ball_going_right = True
+    return ball_going_right
+def brick_generator():
     brickxy = []
     for i in range(0,4):
         for a in range(0,9):
-            x = 0+(a*100)
-            y = 250-(i*50)
+            x = (a*brick_width)
+            y = 250-(i*brick_length)
             if i == 0:
                 colour = red
             elif i == 1:
@@ -92,7 +101,7 @@ def brick():
             elif i == 3:
                 colour = blue
             brickxy.append([x,y,i])
-            obj(x,y,100,50,colour)
+            obj(x,y,brick_width,brick_length,colour)
             pygame.display.update()
     return brickxy
 def updatebrick(brickxy):
@@ -108,17 +117,17 @@ def updatebrick(brickxy):
             colour = green
         elif temp == 3:
             colour = blue
-        obj(x,y,100,50,colour)
-def detect(bx,by,brickxy):
+        obj(x,y,brick_width,brick_length,colour)
+def detect(ball_x,ball_y,brickxy):
     global score
     for i in range(0,(len(brickxy)-1)):
         x = brickxy[i][0]
         y = brickxy[i][1]
-        xlbound = x
-        ylbound = y
-        xrbound = x + 100
-        yrbound = y + 50
-        if bx <= xrbound and bx >= xlbound and by >= ylbound and by <= yrbound:
+        x_left_boundary = x
+        y_left_boundary = y
+        x_right_boundary = x + brick_width
+        y_right_boundary = y + brick_length
+        if ball_x <= x_right_boundary and ball_x >= x_left_boundary and ball_y >= y_left_boundary and ball_y <= y_right_boundary:
             brickxy[i][0] = displaywidth
             brickxy[i][1] = displayheight
             score += 1
@@ -128,88 +137,89 @@ def gameintro():
     while intro:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
                 quit()
-        gamedisplay.fill(white)
-        largetext = pygame.font.SysFont("comicsansms",50)
-        textsurf, textrect = text_objects("Brickbreaker", largetext)
-        textrect.center = ((displaywidth/2),(displayheight*0.25))
+
+        gamedisplay.fill(pygame.Color("black"))
+        font = pygame.font.SysFont("comicsansms",115) # figure out font size ratio
+        textsurf = font.render("Breakout", True, pygame.Color("white"))
+        textrect = textsurf.get_rect()
+        textrect.center = ((displaywidth/2),(displayheight/5))
         gamedisplay.blit(textsurf, textrect)
-        button("Start",150,450,100,50,green,bright_green,gameloop)
-        button("Quit",550,450,100,50,red,bright_red,quit)
+
+        button("Start",displaywidth*(3/16),displayheight*(3/4),displaywidth/6,displayheight/12,black,green,bright_green,gameloop) # creates button
+        button("Quit",displaywidth*(11/16),displayheight*(3/4),displaywidth/6,displayheight/12,black,red,bright_red,quit) # creates button
+
         pygame.display.update()
         clock.tick(15)
 def gameloop():
-    global mx, my, px, py, bx, by, bright, bup, FPS, lives, score, pheight, pwidth, dbx, dby
+    global paddle_x, paddle_y, ball_x, ball_y, ball_going_right, ball_going_up, FPS, lives, score, paddle_height, paddle_width, ball_xchange, ball_xchange
     gameexit = False
     dx = 0
-    brickxy = brick()
+    brickxy = brick_generator()
     #pygame.mixer.Sound.play(theme)
     while not gameexit:
-        mx,my = pygame.mouse.get_pos()
-        brighttemp = bright
-        buptemp = bup
+        ball_going_righttemp = ball_going_right
+        ball_going_uptemp = ball_going_up
         scoretemp = score
         for event in pygame.event.get(): # to quit game
             if event.type == pygame.QUIT:
                 gameexit = True
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT and px >= 0 and px <=800:
+                if event.key == pygame.K_LEFT and paddle_x >= 0 and paddle_x <=800:
                     dx = -20
-                if event.key == pygame.K_RIGHT and px >= 0 and px <=800:
+                if event.key == pygame.K_RIGHT and paddle_x >= 0 and paddle_x <=800:
                     dx = 20
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                     dx = 0
-        if px <= 0:
-            px = 1
-        if px >= 800:
-            px = 799
+        if paddle_x <= 0:
+            paddle_x = 1
+        if paddle_x >= 800:
+            paddle_x = 799
         if lives == 0: # lose game
             gameexit = True
-        lbound = px - 20
-        rbound = px + (pwidth/2) + 20
-        if bup == False and by >= 490 and by <= 520 and bx <= rbound and bx >= lbound:# paddle hit
-            bup = True
-        elif bx <= 0 or bx >= 800: # hit side walls
-            bright = flipflop(bright)
-        elif by >= 600: # hit floor
+        lbound = paddle_x - 20
+        rbound = paddle_x + (paddle_width/2) + 20
+        if ball_going_up == False and ball_y >= 490 and ball_y <= 520 and ball_x <= rbound and ball_x >= lbound:# paddle hit
+            ball_going_up = True
+        elif ball_x <= 0 or ball_x >= 800: # hit side walls
+            ball_going_right = flipflop(ball_going_right)
+        elif ball_y >= 600: # hit floor
             lives -= 1
-            px = 400-(pwidth/2)
-            py = 500
-            bx = 400
-            by = 480
-            brickxy = brick()
+            paddle_x = 400-(paddle_width/2)
+            paddle_y= 500
+            ball_x = 400
+            ball_y = 480
+            brickxy = brick_generator()
             a = random.randint(0,1)
             if a == 1:
-                bright = True
+                ball_going_right = True
             else:
-                bright = False
-            bup = True
-        elif by <= 0: # hit ceiling
-            bup = False
-        px += dx
-        gamedisplay.fill(pygame.Color("white"))
-        text("Score: ", score, 50,50)
-        text("Lives: ", lives, 150,50)
-        detect(bx,by,brickxy)
+                ball_going_right = False
+            ball_going_up = True
+        elif ball_y <= 0: # hit ceiling
+            ball_going_up = False
+        paddle_x += dx
+        gamedisplay.fill(pygame.Color("gray"))
+        counter("Score: ", score, 50,50)
+        counter("Lives: ", lives, 150,50)
+        detect(ball_x,ball_y,brickxy)
         if scoretemp != score:
-            bup = flipflop(bup)
-        if bup == True and bright == True:
-            bx += dbx
-            by -= dby
-        elif bup == True and bright == False:
-            bx -= dbx
-            by -= dby
-        elif bup == False and bright == True:
-            bx += dbx
-            by += dby
-        elif bup == False and bright == False:
-            bx -= dbx
-            by += dby
-        obj(px,py,pwidth,pheight,red)
-        obj(bx,by,bwidth,bheight,blue)
-        #print(px, py, lbound, rbound, bx, by)
+            ball_going_up = flipflop(ball_going_up)
+        if ball_going_up == True and ball_going_right == True:
+            ball_x += ball_xchange
+            ball_y -= ball_ychange
+        elif ball_going_up == True and ball_going_right == False:
+            ball_x -= ball_xchange
+            ball_y -= ball_ychange
+        elif ball_going_up == False and ball_going_right == True:
+            ball_x += ball_xchange
+            ball_y += ball_ychange
+        elif ball_going_up == False and ball_going_right == False:
+            ball_x -= ball_xchange
+            ball_y += ball_ychange
+        obj(paddle_x,paddle_y,paddle_width,paddle_height,red)
+        obj(ball_x,ball_y,ball_width,ball_height,blue)
         pygame.display.update()#refreshs
         clock.tick(FPS) # sets the fps of the game
     lives = 3
