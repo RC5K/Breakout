@@ -1,32 +1,10 @@
 import pygame, time, sys, random
 pygame.init()
-lives = 3
-score = 0
-FPS = 60
 displaywidth = 800
 displayheight = 600
 gamedisplay = pygame.display.set_mode((displaywidth,displayheight)) # builds the window and sets size
 pygame.display.set_caption("Brickbreaker")# sets the name of the window
 clock = pygame.time.Clock()
-paddle_height = displayheight/30
-paddle_width = (3/16)*displaywidth
-ball_height = displayheight/40
-ball_width = (3/160)*displaywidth
-ball_going_up = True
-a = random.randint(0,1)
-if a == 1:
-    ball_going_right = True
-else:
-    ball_going_right = False
-ball_xchange = displaywidth/200
-ball_ychange = displayheight/200
-paddle_xchange = displaywidth/40
-paddle_x = (displaywidth/2)-(paddle_width/2)
-paddle_y = (5/6)*displayheight
-ball_x = displaywidth/2
-ball_y = (4/5)*displayheight
-brick_length = displayheight/12
-brick_width = displaywidth/8
 
 
 #colours
@@ -72,7 +50,7 @@ def flipflop(state):
     elif state== False:
         new_state = True
     return new_state
-def updatebrick(brickxy):
+def updatebrick(brickxy,brick_width,brick_length):
     for i in brickxy:
         colour = i[2]
         x = i[0]
@@ -86,7 +64,7 @@ def updatebrick(brickxy):
         elif colour == 3:
             colour = blue
         obj(x,y,brick_width,brick_length,colour)
-def brick_generator():
+def brick_generator(brick_width,brick_length,displayheight):
     brickxy = []
     for i in range(0,4):
         for a in range(0,9):
@@ -101,9 +79,9 @@ def brick_generator():
             elif i == 3:
                 colour = blue
             brickxy.append([x,y,i])
-    updatebrick(brickxy)
+    updatebrick(brickxy,brick_width,brick_length)
     return brickxy
-def detect(ball_x,ball_y,brickxy,score):
+def detect(ball_x,ball_y,brickxy,score,brick_width,brick_length,displaywidth,displayheight):
     for i in brickxy:
         x = i[0]
         y = i[1]
@@ -115,7 +93,7 @@ def detect(ball_x,ball_y,brickxy,score):
             i[0] = displaywidth
             i[0] = displayheight
             score += 1
-    updatebrick(brickxy)
+    updatebrick(brickxy,brick_width,brick_length)
     return score
 def gameintro():
     intro = True
@@ -133,18 +111,39 @@ def gameintro():
         pygame.display.update()
 
 def gameloop():
-    global paddle_x, paddle_y, ball_x, ball_y, ball_going_right, ball_going_up, FPS, lives, score, paddle_height, paddle_width, ball_xchange, ball_ychange, paddle_xchange
+    lives = 3
+    score = 0
+    FPS = 60
+    paddle_height = displayheight/30
+    paddle_width = (3/16)*displaywidth
+    ball_height = displayheight/40
+    ball_width = (3/160)*displaywidth
+    ball_going_up = True
+    a = random.randint(0,1)
+    if a == 1:
+        ball_going_right = True
+    else:
+        ball_going_right = False
+    ball_xchange = displaywidth/200
+    ball_ychange = displayheight/200
+    paddle_xchange = displaywidth/40
+    paddle_x = (displaywidth/2)-(paddle_width/2)
+    paddle_y = (5/6)*displayheight
+    ball_x = displaywidth/2
+    ball_y = (4/5)*displayheight
+    brick_length = displayheight/12
+    brick_width = displaywidth/8
     gameexit = False
     x_change = 0
-    brickxy = brick_generator()
+    brickxy = brick_generator(brick_width,brick_length,displayheight)
     while not gameexit:
         ball_going_righttemp = ball_going_right
         ball_going_uptemp = ball_going_up
         scoretemp = score
         if lives == 0: # lose game
             gameexit = True
-        if score == 36: # win game and reset
-            brickxy = brick_generator()
+        # if score == 36: # win game and reset
+        #     brickxy = brick_generator()
         for event in pygame.event.get(): # to quit game
             if event.type == pygame.QUIT:
                 gameexit = True
@@ -158,10 +157,10 @@ def gameloop():
                     x_change = 0
         if paddle_x <= 0:
             paddle_x = 1
-        if paddle_x >= displaywidth:
-            paddle_x = displaywidth-1
+        if (paddle_x + paddle_width) >= displaywidth:
+            paddle_x = displaywidth-paddle_width
         paddle_left_boundary = paddle_x - paddle_xchange
-        paddle_right_boundary = paddle_x + (paddle_width/2) + paddle_xchange
+        paddle_right_boundary = paddle_x + paddle_width + paddle_xchange
         if ball_going_up == False and ball_y >= (paddle_y-10) and ball_y <= (paddle_y+20) and ball_x <= paddle_right_boundary and ball_x >= paddle_left_boundary:# paddle hit
             ball_going_up = True
         elif ball_x <= 0 or ball_x >= displaywidth: # hit side walls
@@ -184,7 +183,7 @@ def gameloop():
         gamedisplay.fill(pygame.Color("gray"))
         counter("Score: ", score, displaywidth/16,displayheight/12)
         counter("Lives: ", lives, (3/16)*displaywidth,displayheight/12)
-        score = detect(ball_x,ball_y,brickxy,score)
+        score = detect(ball_x,ball_y,brickxy,score,brick_width,brick_length, displaywidth,displayheight)
         if scoretemp != score:
             ball_going_up = flipflop(ball_going_up)
         if ball_going_up == True and ball_going_right == True:
